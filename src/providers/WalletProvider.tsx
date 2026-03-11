@@ -45,6 +45,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           method: 'wallet_addEthereumChain',
           params: [QFC_CHAIN],
         })
+      } else {
+        throw err
       }
     }
   }, [])
@@ -79,10 +81,19 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!window.ethereum) return
-    const handleAccountsChanged = (...args: unknown[]) => {
+    const handleAccountsChanged = async (...args: unknown[]) => {
       const accounts = args[0] as string[]
-      if (accounts.length === 0) disconnect()
-      else setAddress(accounts[0])
+      if (accounts.length === 0) {
+        disconnect()
+      } else {
+        // Re-create provider and signer for the new account
+        const bp = new ethers.BrowserProvider(window.ethereum!)
+        const s = await bp.getSigner()
+        const addr = await s.getAddress()
+        setProvider(bp)
+        setSigner(s)
+        setAddress(addr)
+      }
     }
     const handleChainChanged = () => window.location.reload()
 
@@ -94,14 +105,27 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   }, [disconnect])
 
-  // Auto-reconnect
+  // Auto-reconnect (uses eth_accounts which doesn't trigger popup)
   useEffect(() => {
     if (!window.ethereum) return
-    window.ethereum.request({ method: 'eth_accounts' }).then((result) => {
+    window.ethereum.request({ method: 'eth_accounts' }).then(async (result) => {
       const accounts = result as string[]
-      if (accounts.length > 0) connect()
+      if (accounts.length > 0) {
+        try {
+          const bp = new ethers.BrowserProvider(window.ethereum!)
+          const s = await bp.getSigner()
+          const addr = await s.getAddress()
+          setProvider(bp)
+          setSigner(s)
+          setAddress(addr)
+        } catch (err) {
+          console.error('Auto-reconnect failed:', err)
+        }
+      }
+    }).catch((err: unknown) => {
+      console.error('Failed to check existing accounts:', err)
     })
-  }, [connect])
+  }, [])
 
   return (
     <WalletContext.Provider value={{ address, signer, provider, connect, disconnect, isConnecting }}>

@@ -9,18 +9,26 @@ import { useTasks } from '@/hooks/useTasks'
 import { useWallet } from '@/providers/WalletProvider'
 import { mockModels } from '@/lib/mock-data'
 import { mockMiners } from '@/lib/mock-data'
+import { MinerStatus } from '@/lib/types'
 
 function HomeContent() {
   const searchParams = useSearchParams()
   const defaultModel = searchParams.get('model') || undefined
   const { address } = useWallet()
-  const { tasks, loading } = useTasks({
+
+  // When connected, show user's tasks; when disconnected, show all
+  const { tasks: allTasks, loading: allLoading } = useTasks({ autoRefresh: true })
+  const { tasks: myTasks, loading: myLoading } = useTasks({
     autoRefresh: true,
     submitterFilter: address,
   })
 
-  const totalTasks = 3955
-  const activeMiners = mockMiners.filter(m => m.status === 'Active').length
+  const tasks = address ? myTasks : allTasks
+  const loading = address ? myLoading : allLoading
+
+  // TODO: Replace with nextTaskId() contract call
+  const totalTasks = allTasks.length
+  const activeMiners = mockMiners.filter(m => m.status === MinerStatus.Active).length
   const modelsAvailable = mockModels.length
 
   return (
@@ -58,7 +66,7 @@ function HomeContent() {
                 Live
               </div>
             </div>
-            <LiveFeed tasks={address ? tasks : tasks} loading={loading} />
+            <LiveFeed tasks={tasks} loading={loading} />
           </div>
         </div>
       </div>

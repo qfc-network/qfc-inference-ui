@@ -25,17 +25,24 @@ export function useTasks(options: UseTasksOptions = {}) {
 
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchTasks = useCallback(() => {
-    // TODO: Replace with contract calls
-    let filtered = [...mockTasks]
-    if (statusFilter) filtered = filtered.filter(t => t.status === statusFilter)
-    if (modelFilter) filtered = filtered.filter(t => t.modelId === modelFilter)
-    if (minerFilter) filtered = filtered.filter(t => t.miner?.toLowerCase() === minerFilter.toLowerCase())
-    if (submitterFilter) filtered = filtered.filter(t => t.submitter.toLowerCase() === submitterFilter.toLowerCase())
-    filtered.sort((a, b) => b.createdAt - a.createdAt)
-    setTasks(filtered)
-    setLoading(false)
+    try {
+      // TODO: Replace with contract calls
+      let filtered = [...mockTasks]
+      if (statusFilter) filtered = filtered.filter(t => t.status === statusFilter)
+      if (modelFilter) filtered = filtered.filter(t => t.modelId === modelFilter)
+      if (minerFilter) filtered = filtered.filter(t => t.miner?.toLowerCase() === minerFilter.toLowerCase())
+      if (submitterFilter) filtered = filtered.filter(t => t.submitter.toLowerCase() === submitterFilter.toLowerCase())
+      filtered.sort((a, b) => b.createdAt - a.createdAt)
+      setTasks(filtered)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch tasks')
+    } finally {
+      setLoading(false)
+    }
   }, [statusFilter, modelFilter, minerFilter, submitterFilter])
 
   useEffect(() => {
@@ -45,5 +52,5 @@ export function useTasks(options: UseTasksOptions = {}) {
     return () => clearInterval(interval)
   }, [fetchTasks, autoRefresh, intervalMs])
 
-  return { tasks, loading, refresh: fetchTasks }
+  return { tasks, loading, error, refresh: fetchTasks }
 }

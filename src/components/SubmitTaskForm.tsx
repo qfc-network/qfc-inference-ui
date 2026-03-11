@@ -31,6 +31,19 @@ export function SubmitTaskForm({ defaultModel }: { defaultModel?: string }) {
     }
     if (!signer || !selectedModel || !input || !maxFee) return
 
+    // Validate input length
+    if (input.length > 10000) {
+      setTxStatus('error')
+      return
+    }
+
+    // Validate maxFee is a valid number
+    const feeNum = parseFloat(maxFee)
+    if (isNaN(feeNum) || feeNum <= 0) {
+      setTxStatus('error')
+      return
+    }
+
     setTxStatus('pending')
     try {
       // TODO: Replace with actual contract call
@@ -71,6 +84,7 @@ export function SubmitTaskForm({ defaultModel }: { defaultModel?: string }) {
           onChange={e => setInput(e.target.value)}
           placeholder="Enter your text prompt or describe audio/image input..."
           rows={4}
+          maxLength={10000}
           className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent placeholder-gray-500 resize-none"
         />
       </div>
@@ -96,7 +110,7 @@ export function SubmitTaskForm({ defaultModel }: { defaultModel?: string }) {
 
       <button
         type="submit"
-        disabled={txStatus === 'pending' || (!address && false)}
+        disabled={txStatus === 'pending'}
         className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-xl transition-all text-sm"
       >
         {txStatus === 'pending' ? (
@@ -112,15 +126,19 @@ export function SubmitTaskForm({ defaultModel }: { defaultModel?: string }) {
       </button>
 
       {txStatus === 'success' && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
-          <p className="text-sm text-emerald-300">Task submitted successfully!</p>
-          <p className="text-xs text-gray-400 font-mono mt-1 break-all">Tx: {txHash}</p>
+        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex items-start justify-between">
+          <div>
+            <p className="text-sm text-emerald-300">Task submitted successfully!</p>
+            <p className="text-xs text-gray-400 font-mono mt-1 break-all">Tx: {txHash}</p>
+          </div>
+          <button onClick={() => setTxStatus('idle')} className="text-gray-500 hover:text-white ml-2 shrink-0">&times;</button>
         </div>
       )}
 
       {txStatus === 'error' && (
-        <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-4">
+        <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 flex items-start justify-between">
           <p className="text-sm text-rose-300">Failed to submit task. Please try again.</p>
+          <button onClick={() => setTxStatus('idle')} className="text-gray-500 hover:text-white ml-2 shrink-0">&times;</button>
         </div>
       )}
     </form>
