@@ -1,13 +1,21 @@
+import { ethers } from 'ethers'
+
 export function shortenAddress(address: string, chars = 4): string {
   return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`
 }
 
 export function formatQfc(wei: string): string {
-  const value = Number(wei) / 1e18
-  if (value >= 1000) return value.toLocaleString(undefined, { maximumFractionDigits: 2 })
-  if (value >= 1) return value.toFixed(4)
-  if (value >= 0.001) return value.toFixed(6)
-  return value.toExponential(2)
+  try {
+    const formatted = ethers.formatEther(wei)
+    const value = parseFloat(formatted)
+    if (value >= 1000) return value.toLocaleString(undefined, { maximumFractionDigits: 2 })
+    if (value >= 1) return value.toFixed(4)
+    if (value >= 0.001) return value.toFixed(6)
+    if (value === 0) return '0'
+    return value.toExponential(2)
+  } catch {
+    return '0'
+  }
 }
 
 export function formatTimeAgo(timestamp: number): string {

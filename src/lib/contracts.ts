@@ -26,8 +26,14 @@ export const FEE_ESCROW_ABI = [
   'function getEscrow(uint256 taskId) view returns (uint256)',
 ]
 
-export function getReadProvider() {
-  return new ethers.JsonRpcProvider(RPC_URL)
+// Singleton read provider — reuses connection
+let _readProvider: ethers.JsonRpcProvider | null = null
+
+export function getReadProvider(): ethers.JsonRpcProvider {
+  if (!_readProvider) {
+    _readProvider = new ethers.JsonRpcProvider(RPC_URL)
+  }
+  return _readProvider
 }
 
 export function getTaskRegistry(signerOrProvider: ethers.Signer | ethers.Provider) {
@@ -40,4 +46,8 @@ export function getMinerRegistry(signerOrProvider: ethers.Signer | ethers.Provid
 
 export function getModelRegistry(signerOrProvider: ethers.Signer | ethers.Provider) {
   return new ethers.Contract(CONTRACTS.modelRegistry, MODEL_REGISTRY_ABI, signerOrProvider)
+}
+
+export function getFeeEscrow(signerOrProvider: ethers.Signer | ethers.Provider) {
+  return new ethers.Contract(CONTRACTS.feeEscrow, FEE_ESCROW_ABI, signerOrProvider)
 }

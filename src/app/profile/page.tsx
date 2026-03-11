@@ -19,13 +19,14 @@ export default function ProfilePage() {
   const [registerGpu, setRegisterGpu] = useState('')
   const [registerEndpoint, setRegisterEndpoint] = useState('')
   const [registering, setRegistering] = useState(false)
+  const [registerStatus, setRegisterStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
   // Check if connected address is a miner
   const minerData = address
     ? mockMiners.find(m => m.address.toLowerCase() === address.toLowerCase())
     : null
 
-  const totalSpend = tasks.reduce((acc, t) => acc + Number(t.maxFee), 0)
+  const totalSpend = tasks.reduce((acc, t) => acc + BigInt(t.maxFee), BigInt(0)).toString()
 
   if (!address) {
     return (
@@ -55,15 +56,17 @@ export default function ProfilePage() {
     e.preventDefault()
     if (!signer) return
     setRegistering(true)
+    setRegisterStatus('idle')
     try {
       // TODO: Replace with contract call
       // const registry = getMinerRegistry(signer)
       // const tx = await registry.registerMiner(registerTier, registerGpu, registerEndpoint, { value: stakeAmount })
       // await tx.wait()
       await new Promise(resolve => setTimeout(resolve, 2000))
-      alert('Registration submitted (mock)!')
+      setRegisterStatus('success')
     } catch (err) {
       console.error('Registration failed:', err)
+      setRegisterStatus('error')
     } finally {
       setRegistering(false)
     }
@@ -78,7 +81,7 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <StatsCard label="Tasks Submitted" value={tasks.length} sub="By connected wallet" />
-        <StatsCard label="Total Spend" value={`${formatQfc(totalSpend.toString())} QFC`} sub="Max fees committed" />
+        <StatsCard label="Total Spend" value={`${formatQfc(totalSpend)} QFC`} sub="Max fees committed" />
         <StatsCard
           label="Miner Status"
           value={minerData ? `Tier ${minerData.tier}` : 'Not Registered'}
@@ -148,10 +151,11 @@ export default function ProfilePage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Endpoint URL</label>
                   <input
-                    type="text"
+                    type="url"
                     value={registerEndpoint}
                     onChange={e => setRegisterEndpoint(e.target.value)}
                     placeholder="https://your-miner.example.com"
+                    maxLength={200}
                     className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder-gray-500"
                   />
                 </div>
@@ -162,6 +166,18 @@ export default function ProfilePage() {
                 >
                   {registering ? 'Registering...' : 'Register as Miner'}
                 </button>
+                {registerStatus === 'success' && (
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex items-start justify-between">
+                    <p className="text-sm text-emerald-300">Registration submitted successfully!</p>
+                    <button onClick={() => setRegisterStatus('idle')} className="text-gray-500 hover:text-white ml-2 shrink-0">&times;</button>
+                  </div>
+                )}
+                {registerStatus === 'error' && (
+                  <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 flex items-start justify-between">
+                    <p className="text-sm text-rose-300">Registration failed. Please try again.</p>
+                    <button onClick={() => setRegisterStatus('idle')} className="text-gray-500 hover:text-white ml-2 shrink-0">&times;</button>
+                  </div>
+                )}
               </form>
             </div>
           </div>

@@ -10,10 +10,10 @@ export function Footer() {
             QFC AI Inference Marketplace
           </div>
           <div className="flex items-center gap-6 text-sm text-gray-500">
-            <span className="hover:text-gray-300 transition-colors cursor-pointer">Explorer</span>
-            <span className="hover:text-gray-300 transition-colors cursor-pointer">Faucet</span>
-            <span className="hover:text-gray-300 transition-colors cursor-pointer">Docs</span>
-            <span className="hover:text-gray-300 transition-colors cursor-pointer">GitHub</span>
+            <a href="https://explorer.testnet.qfc.network" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition-colors">Explorer</a>
+            <a href="https://faucet.testnet.qfc.network" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition-colors">Faucet</a>
+            <a href="https://docs.qfc.network" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition-colors">Docs</a>
+            <a href="https://github.com/qfc-network" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition-colors">GitHub</a>
           </div>
         </div>
       </div>
